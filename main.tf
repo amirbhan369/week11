@@ -4,7 +4,7 @@
 resource "aws_security_group" "web_sg_secure" {
   name        = "web-sg-secure"
   description = "Security Group for Web Access"
-  vpc_id      = "vpc-xxxxxxxx" # Replace with your actual VPC ID
+  vpc_id      = "vpc-0a891759e63888382" # Replace with your actual VPC ID
 
   # Ingress rule is specific and limited, NOT 0.0.0.0/0
   ingress {
@@ -12,7 +12,7 @@ resource "aws_security_group" "web_sg_secure" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["203.0.113.0/24"] # Replace with your actual trusted CIDR block
+    cidr_blocks = ["172.31.0.0/16"] # Replace with your actual trusted CIDR block
   }
   
   # Egress can be left open (0.0.0.0/0) if specific egress rules aren't strictly required, 
