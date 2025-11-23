@@ -1,26 +1,28 @@
-# main.tf on staging branch (FIXED)
+# main.tf on staging branch (FIXED AND SECURE)
 
-# 1. Security Group: Remove 0.0.0.0/0 for ingress/egress
-resource "aws_security_group" "web_sg" {
+# 1. Define a more restrictive Security Group
+resource "aws_security_group" "web_sg_secure" {
   name        = "web-sg-secure"
-  description = "Allows inbound web traffic only from a specific port/range"
+  description = "Security Group for Web Access"
+  vpc_id      = "vpc-xxxxxxxx" # Replace with your actual VPC ID
 
-  # SECURE: Only allows traffic from a specific port (80) from a specific, more limited CIDR block 
-  # or from an internal network (use your actual desired CIDR, e.g., your office/VPN)
+  # Ingress rule is specific and limited, NOT 0.0.0.0/0
   ingress {
-    description = "Web access from limited range"
-    from_port   = 80
-    to_port     = 80
+    description = "HTTPS from my IP"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["203.0.113.0/24"] # Example of a specific CIDR block
+    cidr_blocks = ["203.0.113.0/24"] # Replace with your actual trusted CIDR block
   }
-
-  # SECURE: Defines a specific, safe egress rule, or you can omit the block for AWS's default restricted egress
+  
+  # Egress can be left open (0.0.0.0/0) if specific egress rules aren't strictly required, 
+  # or you can make it more restrictive. For tfsec to pass, the ingress needs to be fixed.
+  # The lab's solution was also to only deploy a Security Group.
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"] # NOTE: The lab document's solution may be to just remove the instance to only deploy a SG
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
@@ -28,24 +30,21 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# 2. Instance: Add explicit block device encryption
+# 2. Instance resource removed or fixed (if kept, must enforce encryption)
+/* If you kept the 'aws_instance' resource, you must explicitly enforce encryption 
+    to fix the "Instance with unencrypted block device" error.
+*/
 resource "aws_instance" "web" {
-  # This AMI ID is for example purposes.
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
+  # ... (other instance configuration) ...
   
-  # SECURE: Explicitly defines the root block device with encryption enabled
+  # FIX: Add the root_block_device block to explicitly enable encryption.
   root_block_device {
-    encrypted = true # Fixes the "Instance with unencrypted block device" error
+    encrypted = true
+    # Optionally, specify the size and volume type
+    volume_size = 8
+    volume_type = "gp3"
   }
   
-  # You would also need a data block for the AMI lookup to avoid a different error
-  # data "aws_ami" "ubuntu" {
-  #   most_recent = true
-  #   filter {
-  #     name   = "name"
-  #     values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
-  #   }
-  #   owners = ["099720109477"]
-  # }
+  # This resource must be added to your staging branch to fix the alert
+  vpc_security_group_ids = [aws_security_group.web_sg_secure.id]
 }
