@@ -46,5 +46,5 @@ resource "aws_instance" "web" {
   }
   */
   # This resource must be added to your staging branch to fix the alert
-  vpc_security_group_ids = [aws_security_group.web_sg_secure.id]
+#  vpc_security_group_ids = [aws_security_group.web_sg_secure.id]
 }
