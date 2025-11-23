@@ -38,7 +38,7 @@ resource "aws_security_group" "web_sg_secure" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["192.168.1.0/24"] # Example of a specific CIDR block (Replace with your actual trusted IP/range)
+    cidr_blocks = ["172.31.0.0/24"] # Example of a specific CIDR block (Replace with your actual trusted IP/range)
   }
 
   # Egress rule: Default is usually safe, but defining it ensures a description is present
@@ -54,5 +54,3 @@ resource "aws_security_group" "web_sg_secure" {
     Name = "WebSecurityGroup"
   }
 }
-
-# NOTE: The problematic 'aws_instance' resource has been REMOVED as per the lab's final passing solution (only deploy a security group).
