@@ -33,7 +33,7 @@ resource "aws_security_group" "web_sg_secure" {
 # 2. Instance resource removed or fixed (if kept, must enforce encryption)
 /* If you kept the 'aws_instance' resource, you must explicitly enforce encryption 
     to fix the "Instance with unencrypted block device" error.
-*/
+
 resource "aws_instance" "web" {
   # ... (other instance configuration) ...
   
@@ -44,7 +44,7 @@ resource "aws_instance" "web" {
     volume_size = 8
     volume_type = "gp3"
   }
-  
+  */
   # This resource must be added to your staging branch to fix the alert
   vpc_security_group_ids = [aws_security_group.web_sg_secure.id]
 }
