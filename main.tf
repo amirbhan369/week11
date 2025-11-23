@@ -7,29 +7,29 @@ terraform {
   }
 }
 provider "aws" {
-  region = "us-east-1" # Set your desired region
+  region = "us-east-1" 
 }
 resource "aws_security_group" "web_sg_secure" {
   name        = "web-sg-secure"
   description = "Allows specific HTTP/HTTPS from a limited range" 
   vpc_id      = "vpc-0a891759e63888382" 
   ingress {
-    description = "Allow HTTP for Web Access" # Required description
+    description = "Allow HTTP for Web Access"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["172.31.0.0/16"] # Example of a specific CIDR block (Replace with your actual trusted IP/range)
+    cidr_blocks = ["172.31.0.0/16"] 
   }
   
   ingress {
-    description = "Allow HTTPS for Web Access" # Required description
+    description = "Allow HTTPS for Web Access" 
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["172.31.0.0/24"] # Example of a specific CIDR block (Replace with your actual trusted IP/range)
+    cidr_blocks = ["172.31.0.0/24"] 
   }
   egress {
-    description = "Allow all outbound traffic" # Required description
+    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
