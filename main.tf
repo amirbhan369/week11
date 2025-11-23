@@ -40,6 +40,17 @@ resource "aws_instance" "web" {
   root_block_device {
     encrypted = true # Fixes the "Instance with unencrypted block device" error
   }
+resource "aws_instance" "web" {
+  # ... (other instance configuration blocks) ...
+
+  # FIX: Add this block to enforce IMDSv2 (Session Token Requirement)
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required" # This is the critical line to fix the alert
+  }
+
+  # ... (rest of the aws_instance configuration) ...
+}
 /* If you kept the 'aws_instance' resource, you must explicitly enforce encryption 
     to fix the "Instance with unencrypted block device" error.
 
