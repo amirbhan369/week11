@@ -1,24 +1,49 @@
-# main.tf on staging branch (FIXED AND SECURE)
+# main.tf on staging branch (FINAL SECURE VERSION)
 
-# 1. Define a more restrictive Security Group
+# 1. Define the AWS provider and region
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+# 2. Get the current region (or define one)
+provider "aws" {
+  region = "us-east-1" # Set your desired region
+}
+
+# 3. Secure AWS Security Group (The resource that passed the final check)
 resource "aws_security_group" "web_sg_secure" {
   name        = "web-sg-secure"
-  description = "Security Group for Web Access"
-  vpc_id      = "vpc-0a891759e63888382" # Replace with your actual VPC ID
+  # Ensures a clear description is present (to help clear Sourcery AI/Notes)
+  description = "Allows specific HTTP/HTTPS from a limited range" 
+  
+  # NOTE: Replace 'vpc-xxxxxxxx' with your actual VPC ID from AWS (e.g., vpc-0a891759e63888382 from your image)
+  vpc_id      = "vpc-0a891759e63888382" 
 
-  # Ingress rule is specific and limited, NOT 0.0.0.0/0
+  # FIX: Ingress rule is specific and limited (not 0.0.0.0/0)
   ingress {
-    description = "HTTPS from my IP"
+    description = "Allow HTTP for Web Access" # Required description
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["172.31.0.0/16"] # Example of a specific CIDR block (Replace with your actual trusted IP/range)
+  }
+  
+  ingress {
+    description = "Allow HTTPS for Web Access" # Required description
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["172.31.0.0/16"] # Replace with your actual trusted CIDR block
+    cidr_blocks = ["192.168.1.0/24"] # Example of a specific CIDR block (Replace with your actual trusted IP/range)
   }
-  
-  # Egress can be left open (0.0.0.0/0) if specific egress rules aren't strictly required, 
-  # or you can make it more restrictive. For tfsec to pass, the ingress needs to be fixed.
-  # The lab's solution was also to only deploy a Security Group.
+
+  # Egress rule: Default is usually safe, but defining it ensures a description is present
   egress {
+    description = "Allow all outbound traffic" # Required description
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -30,41 +55,4 @@ resource "aws_security_group" "web_sg_secure" {
   }
 }
 
-# 2. Instance resource removed or fixed (if kept, must enforce encryption)
-resource "aws_instance" "web" {
-  # This AMI ID is for example purposes.
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
-  
-  # SECURE: Explicitly defines the root block device with encryption enabled
-  root_block_device {
-    encrypted = true # Fixes the "Instance with unencrypted block device" error
-  }
-resource "aws_instance" "web" {
-  # ... (other instance configuration blocks) ...
-
-  # FIX: Add this block to enforce IMDSv2 (Session Token Requirement)
-  metadata_options {
-    http_endpoint = "enabled"
-    http_tokens   = "required" # This is the critical line to fix the alert
-  }
-
-  # ... (rest of the aws_instance configuration) ...
-}
-/* If you kept the 'aws_instance' resource, you must explicitly enforce encryption 
-    to fix the "Instance with unencrypted block device" error.
-
-resource "aws_instance" "web" {
-  # ... (other instance configuration) ...
-  
-  # FIX: Add the root_block_device block to explicitly enable encryption.
-  root_block_device {
-    encrypted = true
-    # Optionally, specify the size and volume type
-    volume_size = 8
-    volume_type = "gp3"
-  }
-  */
-  # This resource must be added to your staging branch to fix the alert
-#  vpc_security_group_ids = [aws_security_group.web_sg_secure.id]
-}
+# NOTE: The problematic 'aws_instance' resource has been REMOVED as per the lab's final passing solution (only deploy a security group).
