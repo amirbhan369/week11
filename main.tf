@@ -31,6 +31,15 @@ resource "aws_security_group" "web_sg_secure" {
 }
 
 # 2. Instance resource removed or fixed (if kept, must enforce encryption)
+resource "aws_instance" "web" {
+  # This AMI ID is for example purposes.
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t2.micro"
+  
+  # SECURE: Explicitly defines the root block device with encryption enabled
+  root_block_device {
+    encrypted = true # Fixes the "Instance with unencrypted block device" error
+  }
 /* If you kept the 'aws_instance' resource, you must explicitly enforce encryption 
     to fix the "Instance with unencrypted block device" error.
 
